@@ -21,7 +21,8 @@ cursor.execute('''
 CREATE TABLE IF NOT EXISTS mes_id_otzivy (
 MESS_ID INTEGER,
 MESS_ID_STAS INTEGER,
-MESS_ID_3 INTEGER
+MESS_ID_3 INTEGER,
+MESS_ID_4 INTEGER
 )
 ''')
 
@@ -34,7 +35,7 @@ def bot_start(message):
     global USERID
     global massivv
 
-    massivv = [1144748923, 1024476833, 1118325249]
+    massivv = [1144748923, 1024476833, 1118325249, 6269154840]
 
     USERID = message.from_user.id
 
@@ -85,14 +86,14 @@ def distribution(message):
             connect = sqlite3.connect('useriddata.db')
             cursor = connect.cursor()
 
-            cursor.execute('SELECT MESS_ID FROM mes_id_otzivy')
-            k_0 = list(set(cursor.fetchall()))
-            k = [int(str(i)[1:-2]) for i in k_0]
-
-            for i in k:
-                bot.forward_message(message.from_user.id, 1024476833, i)
-
             try:
+                cursor.execute('SELECT MESS_ID FROM mes_id_otzivy')
+                k_0 = list(set(cursor.fetchall()))
+                k = [int(str(i)[1:-2]) for i in k_0]
+
+                for i in k:
+                    bot.forward_message(message.from_user.id, 1024476833, i)
+
                 cursor.execute('SELECT MESS_ID_STAS FROM mes_id_otzivy')
                 P_0 = list(set(cursor.fetchall()))
                 P = [int(str(i)[1:-2]) for i in P_0]
@@ -101,8 +102,26 @@ def distribution(message):
                 connect.close()
                 for t in P:
                     bot.forward_message(message.from_user.id, 1144748923, t)
+
+                cursor.execute('SELECT MESS_ID_3 FROM mes_id_otzivy')
+                R_0 = list(set(cursor.fetchall()))
+                R = [int(str(i)[1:-2]) for i in R_0]
+
+                connect.commit()
+                connect.close()
+                for s in R:
+                    bot.forward_message(message.from_user.id, 1118325249, s)
+
+                cursor.execute('SELECT MESS_ID_4 FROM mes_id_otzivy')
+                x_0 = list(set(cursor.fetchall()))
+                x = [int(str(i)[1:-2]) for i in x_0]
+
+                connect.commit()
+                connect.close()
+                for cv in x:
+                    bot.forward_message(message.from_user.id, 6269154840, cv)
             except:
-                print('От Стаса нет отзывов')
+                pass
             stop_message = bot.send_message(message.chat.id, 'Пока что это все отзывы! '
                                                              'Скоро они '
                                                              'пополнятся... '
@@ -402,6 +421,19 @@ def otz_2(message):
         connect.close()
         bot.send_message(message.chat.id, 'Отзыв добавлен!')
         next_start(message)
+    elif str(message.from_user.id) == '6269154840':
+        cursor.execute(
+            f'INSERT INTO mes_id_otzivy (MESS_ID_4) VALUES ({message.message_id})')
+        connect.commit()
+        connect.close()
+        bot.send_message(message.chat.id, 'Отзыв добавлен!')
+        next_start(message)
+
+
+@bot.message_handler(content_types=['text'])
+def helper(message):
+    bot.reply_to(message, 'Произошел перезапуск бота на сервере. Пожалуйста нажмите на '
+                          'команду /start')
 
 
 bot.polling(none_stop=True)
