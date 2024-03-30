@@ -8,10 +8,8 @@ bot = telebot.TeleBot('6597040115:AAH9wOSD44nJm21g8vNoIj7mAkxzrxVcJnk')
 
 PrIsE = 200
 
-
 connect = sqlite3.connect('useriddata.db')
 cursor = connect.cursor()
-
 
 cursor.execute('''
 CREATE TABLE IF NOT EXISTS useridtable (
@@ -19,19 +17,26 @@ USID INTEGER NOT NULL
 )
 ''')
 
+connect.commit()
+connect.close()
+
 
 @bot.message_handler(commands=['start'])
 def bot_start(message):
     global USERID
-    global USERURL
 
-
-    
-
+    massivv = [1144748923, 1024476833]
 
     USERID = message.from_user.id
-    USERURL = '@' + message.from_user.username
-    print(message.from_user.first_name, message.from_user.id)
+
+    if USERID not in massivv:
+        connect = sqlite3.connect('useriddata.db')
+        cursor = connect.cursor()
+
+        cursor.execute(f'INSERT INTO useridtable (USID) VALUES ({message.from_user.id})')
+        connect.commit()
+        connect.close()
+
     bot.reply_to(message, f'Привет, {message.from_user.first_name}!'
                           f'\nДобро пожаловать в WAVXX '
                           f'MUSIC! \nМы занимаемся сведением и мастерингом треков, '
@@ -216,15 +221,18 @@ def mat_in_track(message):
 
 
 def if_error(message):
+    USERURL = '@' + message.from_user.username
     bot.send_message(message.chat.id, 'Извините, произошла техническая ошибка...'
                                       ' С вами свяжется администратор, для оформления'
                                       ' заказа в лс...')
-    bot.send_message(1024476833, f'У пользователя {USERURL} произошла '
+    bot.send_message(1144748923, f'У пользователя {USERURL} произошла '
                                  f'техническая ошибка во время оформления заказа... '
                                  f'Свяжитесь с ним для оформления заказа...')
 
 
 def if_free_or_sell(message):
+    global USERURL
+    USERURL = '@' + message.from_user.username
     if us_prise == 'Платная дистрибуция':
         bot.send_message(message.chat.id, 'Отправляю данные для завершения заказа...')
         bot.send_message(message.chat.id, f'Покупка составит {PrIsE} рублей. '
@@ -249,7 +257,8 @@ def if_free_or_sell(message):
 
 
 def mailing_data_sell():
-    bot.send_message(1024476833, f'Пользователь {USERURL} сделал заказ!'
+    bot.send_message(1144748923, f'Пользователь {USERURL} ({USERID}) '
+                                 f'сделал заказ!'
                                  f'\nЦена: {us_prise}'
                                  f'\nИмя артиста: {NAME_ARTIST}'
                                  f'\nТип релиза: {TYPE_RELIZE}'
@@ -259,9 +268,9 @@ def mailing_data_sell():
                                  f'\n3-й файл - фото договора о покупке бита или видео '
                                  f'с записью проекта бита')
     # TO_CHAT_ID = "593069749"  # айди пользователя ,которому должен приходить файл
-    bot.forward_message(1024476833, USERID, mess_id_wav_file)
-    bot.forward_message(1024476833, USERID, mess_id_photo)
-    bot.forward_message(1024476833, USERID, DOGOVOR_FILE)
+    bot.forward_message(1144748923, USERID, mess_id_wav_file)
+    bot.forward_message(1144748923, USERID, mess_id_photo)
+    bot.forward_message(1144748923, USERID, DOGOVOR_FILE)
 
 
 def start_2(message):
@@ -279,12 +288,42 @@ def start_admin(message):
     bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Вижу, '
                                       f'что ты администратор! Сейчас я тебе расскажу о '
                                       f'основных командах для администратора...')
-    bot.send_message(message.chat.id, 'Для того, чтобы опубликовать текстовое сообщение '
+    next_start(message)
+
+
+def next_start(message):
+    bot.send_message(message.chat.id, 'Для того, чтобы отправить сообщение '
                                       'всем пользователям, введи команду /message')
-    bot.send_message(message.chat.id, 'Для того, чтобы опубликовать сообщение с '
-                                      'фотографией, напиши команду /photos')
     bot.send_message(message.chat.id, 'На этом пока что все! Приятного использования '
-                                      'бота! Успеха)')
+                                      'бота! Успеха)', reply_markup=button.del_btn)
+
+
+@bot.message_handler(commands=['message'])
+def mess_com(message):
+    stop_message = bot.send_message(message.chat.id, 'Давай отправим пользователям '
+                                                     'сообщение. Введи его текст и '
+                                                     'прикрепи файлы если они нужны!')
+    bot.register_next_step_handler(stop_message, spam)
+
+
+def spam(message):
+    connect = sqlite3.connect('useriddata.db')
+    cursor = connect.cursor()
+
+    cursor.execute('SELECT USID FROM useridtable')
+    k_0 = list(set(cursor.fetchall()))
+    k = [int(str(i)[1:-2]) for i in k_0]
+
+    connect.close()
+
+    IDMES = message.message_id
+    USERID = message.from_user.id
+
+    for i in k:
+        bot.forward_message(i, USERID, IDMES)
+
+    bot.send_message(USERID, 'Сообщение отправленно всем пользователям!')
+    next_start(message)
 
 
 bot.polling(none_stop=True)
