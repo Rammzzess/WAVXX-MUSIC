@@ -17,6 +17,14 @@ USID INTEGER NOT NULL
 )
 ''')
 
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS mes_id_otzivy (
+MESS_ID INTEGER,
+MESS_ID_STAS INTEGER,
+MESS_ID_3 INTEGER
+)
+''')
+
 connect.commit()
 connect.close()
 
@@ -24,8 +32,9 @@ connect.close()
 @bot.message_handler(commands=['start'])
 def bot_start(message):
     global USERID
+    global massivv
 
-    massivv = [1144748923, 1024476833]
+    massivv = [1144748923, 1024476833, 1118325249]
 
     USERID = message.from_user.id
 
@@ -73,13 +82,42 @@ def distribution(message):
                                         reply_markup=button.distribution)
             bot.register_next_step_handler(stop_message, distribution)
         elif 'отзывы' in str(message.text).lower():
-            pass
+            connect = sqlite3.connect('useriddata.db')
+            cursor = connect.cursor()
+
+            cursor.execute('SELECT MESS_ID FROM mes_id_otzivy')
+            k_0 = list(set(cursor.fetchall()))
+            k = [int(str(i)[1:-2]) for i in k_0]
+
+            for i in k:
+                bot.forward_message(message.from_user.id, 1024476833, i)
+
+            try:
+                cursor.execute('SELECT MESS_ID_STAS FROM mes_id_otzivy')
+                P_0 = list(set(cursor.fetchall()))
+                P = [int(str(i)[1:-2]) for i in P_0]
+
+                connect.commit()
+                connect.close()
+                for t in P:
+                    bot.forward_message(message.from_user.id, 1144748923, t)
+            except:
+                print('От Стаса нет отзывов')
+            stop_message = bot.send_message(message.chat.id, 'Пока что это все отзывы! '
+                                                             'Скоро они '
+                                                             'пополнятся... '
+                                                             'А пока выберите, хотите ли '
+                                                             'вы оставить заявку на '
+                                                             'дистрибуцию?',
+                                            reply_markup=button.start_reply_bt)
+            bot.register_next_step_handler(stop_message, distribution)
         else:
             stop_message = bot.reply_to(message, 'К сожалению, я не знаю такой команды! '
                                                  'Нажмите на одну из кнопок ниже, чтобы '
                                                  'продолжить...')
             bot.register_next_step_handler(stop_message, distribution)
     except:
+        print('Ошибка! Строка 107')
         stop_message = bot.reply_to(message, 'К сожалению, я не знаю такой команды! '
                                              'Нажмите на одну из кнопок ниже, чтобы '
                                              'продолжить...')
@@ -104,6 +142,8 @@ def distribution_2(message):
                                                          'ваш трек в формате wav',
                                         reply_markup=button.del_btn)
         bot.register_next_step_handler(stop_message, file_wav)
+    elif 'отзывы' in str(message.text).lower():
+        distribution(message)
     else:
         stop_message = bot.reply_to(message, 'К сожалению, я не знаю такой команды! '
                                              'Нажмите на одну из кнопок ниже, чтобы '
@@ -225,9 +265,10 @@ def if_error(message):
     bot.send_message(message.chat.id, 'Извините, произошла техническая ошибка...'
                                       ' С вами свяжется администратор, для оформления'
                                       ' заказа в лс...')
-    bot.send_message(1144748923, f'У пользователя {USERURL} произошла '
-                                 f'техническая ошибка во время оформления заказа... '
-                                 f'Свяжитесь с ним для оформления заказа...')
+    for i in massivv:
+        bot.send_message(i, f'У пользователя {USERURL} произошла '
+                                     f'техническая ошибка во время оформления заказа... '
+                                     f'Свяжитесь с ним для оформления заказа...')
 
 
 def if_free_or_sell(message):
@@ -257,20 +298,21 @@ def if_free_or_sell(message):
 
 
 def mailing_data_sell():
-    bot.send_message(1144748923, f'Пользователь {USERURL} ({USERID}) '
-                                 f'сделал заказ!'
-                                 f'\nЦена: {us_prise}'
-                                 f'\nИмя артиста: {NAME_ARTIST}'
-                                 f'\nТип релиза: {TYPE_RELIZE}'
-                                 f'\nЕсть ли маты в треке: {MAT}'
-                                 f'\n1-й файл - трек в формате wav'
-                                 f'\n2-й файл - обложка трека'
-                                 f'\n3-й файл - фото договора о покупке бита или видео '
-                                 f'с записью проекта бита')
-    # TO_CHAT_ID = "593069749"  # айди пользователя ,которому должен приходить файл
-    bot.forward_message(1144748923, USERID, mess_id_wav_file)
-    bot.forward_message(1144748923, USERID, mess_id_photo)
-    bot.forward_message(1144748923, USERID, DOGOVOR_FILE)
+    for i in massivv:
+        bot.send_message(i, f'Пользователь {USERURL} ({USERID}) '
+                                     f'сделал заказ!'
+                                     f'\nЦена: {us_prise}'
+                                     f'\nИмя артиста: {NAME_ARTIST}'
+                                     f'\nТип релиза: {TYPE_RELIZE}'
+                                     f'\nЕсть ли маты в треке: {MAT}'
+                                     f'\n1-й файл - трек в формате wav'
+                                     f'\n2-й файл - обложка трека'
+                                     f'\n3-й файл - фото договора о покупке бита или видео '
+                                     f'с записью проекта бита')
+        # TO_CHAT_ID = "593069749"  # айди пользователя ,которому должен приходить файл
+        bot.forward_message(i, USERID, mess_id_wav_file)
+        bot.forward_message(i, USERID, mess_id_photo)
+        bot.forward_message(i, USERID, DOGOVOR_FILE)
 
 
 def start_2(message):
@@ -294,6 +336,7 @@ def start_admin(message):
 def next_start(message):
     bot.send_message(message.chat.id, 'Для того, чтобы отправить сообщение '
                                       'всем пользователям, введи команду /message')
+    bot.send_message(message.chat.id, 'Чтобы добавить новый отзыв введи команду /otz')
     bot.send_message(message.chat.id, 'На этом пока что все! Приятного использования '
                                       'бота! Успеха)', reply_markup=button.del_btn)
 
@@ -324,6 +367,41 @@ def spam(message):
 
     bot.send_message(USERID, 'Сообщение отправленно всем пользователям!')
     next_start(message)
+
+
+@bot.message_handler(commands=['otz'])
+def otz_1(message):
+    stop_message = bot.send_message(message.chat.id, 'Скинь сюда отзыв! (текст, фото, '
+                                                     'видео. В общем все что хочешь)')
+    bot.register_next_step_handler(stop_message, otz_2)
+
+
+def otz_2(message):
+    id_otz = message.message_id
+    connect = sqlite3.connect('useriddata.db')
+    cursor = connect.cursor()
+
+    if str(message.from_user.id) == '1144748923':
+        cursor.execute(f'INSERT INTO mes_id_otzivy (MESS_ID_STAS) VALUES '
+                       f'({message.message_id})')
+        connect.commit()
+        connect.close()
+        bot.send_message(message.chat.id, 'Отзыв добавлен!')
+        next_start(message)
+    elif str(message.from_user.id) == '1024476833':
+        cursor.execute(
+            f'INSERT INTO mes_id_otzivy (MESS_ID) VALUES ({message.message_id})')
+        connect.commit()
+        connect.close()
+        bot.send_message(message.chat.id, 'Отзыв добавлен!')
+        next_start(message)
+    elif str(message.from_user.id) == '1118325249':
+        cursor.execute(
+            f'INSERT INTO mes_id_otzivy (MESS_ID_3) VALUES ({message.message_id})')
+        connect.commit()
+        connect.close()
+        bot.send_message(message.chat.id, 'Отзыв добавлен!')
+        next_start(message)
 
 
 bot.polling(none_stop=True)
