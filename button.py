@@ -28,4 +28,8 @@ btn1 = types.KeyboardButton('Да')
 btn2 = types.KeyboardButton('Нет')
 yes_no.add(btn1, btn2)
 
+start_2 = types.ReplyKeyboardMarkup(resize_keyboard=True)
+btn1 = types.KeyboardButton('Оставить заявку на еще одну дистрибуцию...')
+start_2.add(btn1)
+
 del_btn = types.ReplyKeyboardRemove()

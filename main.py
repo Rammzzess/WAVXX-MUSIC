@@ -1,5 +1,6 @@
 import telebot
 import button
+import sqlite3
 
 from telebot import types
 
@@ -8,10 +9,26 @@ bot = telebot.TeleBot('6597040115:AAH9wOSD44nJm21g8vNoIj7mAkxzrxVcJnk')
 PrIsE = 200
 
 
+connect = sqlite3.connect('useriddata.db')
+cursor = connect.cursor()
+
+
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS useridtable (
+USID INTEGER NOT NULL
+)
+''')
+
+
 @bot.message_handler(commands=['start'])
 def bot_start(message):
     global USERID
     global USERURL
+
+
+    
+
+
     USERID = message.from_user.id
     USERURL = '@' + message.from_user.username
     print(message.from_user.first_name, message.from_user.id)
@@ -182,14 +199,14 @@ def mat_in_track(message):
     if 'нет' in str(message.text).lower():
         MAT = 'Нет'
         bot.send_message(message.chat.id, 'Отлично! Обрабатываю '
-                                                         'информацию...',
-                                        reply_markup=button.del_btn)
+                                          'информацию...',
+                         reply_markup=button.del_btn)
         if_free_or_sell(message)
     elif 'да' in str(message.text).lower():
         MAT = 'Да'
         bot.send_message(message.chat.id, 'Отлично! Обрабатываю '
-                                                         'информацию...',
-                                        reply_markup=button.del_btn)
+                                          'информацию...',
+                         reply_markup=button.del_btn)
         if_free_or_sell(message)
     else:
         stop_message = bot.send_message(message.chat.id, 'Воспользуйтесь кнопками. '
@@ -213,14 +230,20 @@ def if_free_or_sell(message):
         bot.send_message(message.chat.id, f'Покупка составит {PrIsE} рублей. '
                                           f'\nОплатите по номеру +79506769732 \nТинькофф '
                                           f'\nОсипов Станислав В.')
-        bot.send_message(message.chat.id, 'После оплаты, отправьте скриншот '
-                                          'операции админу - @Hexxx303')
+        stop_message = bot.send_message(message.chat.id, 'После оплаты, отправьте '
+                                                         'скриншот '
+                                                         'операции админу - @Hexxx303',
+                                        reply_markup=button.start_2)
         mailing_data_sell()
+        bot.register_next_step_handler(stop_message, start_2)
     elif us_prise == 'Бесплатная дистрибуция':
         bot.send_message(message.chat.id, 'Отправляю данные для завершения заказа...')
-        bot.send_message(message.chat.id, 'С вами свяжется администратор, как только '
-                                          'примет заказ')
+        stop_message = bot.send_message(message.chat.id, 'С вами свяжется администратор, '
+                                                         'как только '
+                                                         'примет заказ',
+                                        reply_markup=button.start_2)
         mailing_data_sell()
+        bot.register_next_step_handler(stop_message, start_2)
     else:
         if_error(message)
 
@@ -239,6 +262,29 @@ def mailing_data_sell():
     bot.forward_message(1024476833, USERID, mess_id_wav_file)
     bot.forward_message(1024476833, USERID, mess_id_photo)
     bot.forward_message(1024476833, USERID, DOGOVOR_FILE)
+
+
+def start_2(message):
+    if 'Оставить заявку на еще одну дистрибуцию...' in message.text:
+        bot_start(message)
+    else:
+        stop_message = bot.send_message(message.chat.id, 'Для того, чтобы оставить еще '
+                                                         'одну заявку на дистрибуцию, '
+                                                         'нажмите на кнопку ниже...')
+        bot.register_next_step_handler(stop_message, start_2)
+
+
+@bot.message_handler(commands=['startAdmin'])
+def start_admin(message):
+    bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Вижу, '
+                                      f'что ты администратор! Сейчас я тебе расскажу о '
+                                      f'основных командах для администратора...')
+    bot.send_message(message.chat.id, 'Для того, чтобы опубликовать текстовое сообщение '
+                                      'всем пользователям, введи команду /message')
+    bot.send_message(message.chat.id, 'Для того, чтобы опубликовать сообщение с '
+                                      'фотографией, напиши команду /photos')
+    bot.send_message(message.chat.id, 'На этом пока что все! Приятного использования '
+                                      'бота! Успеха)')
 
 
 bot.polling(none_stop=True)
