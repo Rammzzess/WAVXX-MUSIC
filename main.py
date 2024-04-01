@@ -26,14 +26,14 @@ MESS_ID_5 INTEGER
 ''')
 
 cursor.execute('''
-CREATE TABLE IF NOY EXISTS all_data_user (
-USERID INTEGER,
+CREATE TABLE IF NOT EXISTS all_data_user (
+USERID TEXT,
 us_prise TEXT,
-mess_id_wav_file INTEGER,
+mess_id_wav_file TEXT,
 NAME_ARTIST TEXT,
 TYPE_RELIZE TEXT,
-mess_id_photo INTEGER,
-DOGOVOR_FILE INTEGER,
+mess_id_photo TEXT,
+DOGOVOR_FILE TEXT,
 MAT TEXT,
 USERURL TEXT
 )
@@ -48,7 +48,7 @@ def data_in_table(name_parameter, name_data, usidd):
     cursor = connect.cursor()
 
     cursor.execute(f'UPDATE all_data_user SET {name_parameter} = ? WHERE USERID = ?',
-                   (name_data, usidd))
+                   (name_data, str(usidd)))
 
     connect.commit()
     connect.close()
@@ -59,7 +59,7 @@ def select_data(name_parameter, usidd):
     cursor = connect.cursor()
 
     cursor.execute(f'SELECT {name_parameter} FROM all_data_user WHERE USERID = ?',
-                   (usidd))
+                   (str(usidd),))
 
     k_0 = list(set(cursor.fetchall()))
     k = [str(i)[1:-2] for i in k_0]
@@ -362,7 +362,7 @@ def if_error(message):
 
 
 def if_free_or_sell(message):
-    us_prise = select_data('us_prise', message.from_user.id)
+    us_prise = (select_data('us_prise', message.from_user.id))[1:-1]
     if us_prise == 'Платная дистрибуция':
         bot.send_message(message.chat.id, 'Отправляю данные для завершения заказа...')
         bot.send_message(message.chat.id, f'Покупка составит {PrIsE} рублей. '
@@ -387,31 +387,34 @@ def if_free_or_sell(message):
 
 
 def mailing_data_sell(message):
-    USERID = message.from_user.id
-    USERURL = select_data('USERURL', USERID)
-    us_prise = select_data('us_prise', USERID)
-    NAME_ARTIST = select_data('NAME_ARTIST', USERID)
-    TYPE_RELIZE = select_data('TYPE_RELIZE', USERID)
-    MAT = select_data('MAT', USERID)
-    mess_id_wav_file = select_data('mess_id_wav_file', USERID)
-    mess_id_photo = select_data('mess_id_photo', USERID)
-    DOGOVOR_FILE = select_data('DOGOVOR_FILE', USERID)
+    try:
+        USERID = message.from_user.id
+        USERURL = (select_data('USERURL', USERID))[1:-1]
+        us_prise = (select_data('us_prise', USERID))[1:-1]
+        NAME_ARTIST = (select_data('NAME_ARTIST', USERID))[1:-1]
+        TYPE_RELIZE = (select_data('TYPE_RELIZE', USERID))[1:-1]
+        MAT = (select_data('MAT', USERID))[1:-1]
+        mess_id_wav_file = (select_data('mess_id_wav_file', USERID))[1:-1]
+        mess_id_photo = (select_data('mess_id_photo', USERID))[1:-1]
+        DOGOVOR_FILE = (select_data('DOGOVOR_FILE', USERID))[1:-1]
 
-    for i in massivv:
-        bot.send_message(i, f'Пользователь {USERURL} ({USERID}) '
-                            f'сделал заказ!'
-                            f'\nЦена: {us_prise}'
-                            f'\nИмя артиста: {NAME_ARTIST}'
-                            f'\nТип релиза: {TYPE_RELIZE}'
-                            f'\nЕсть ли маты в треке: {MAT}'
-                            f'\n1-й файл - трек в формате wav'
-                            f'\n2-й файл - обложка трека'
-                            f'\n3-й файл - фото договора о покупке бита или '
-                            f'видео с записью проекта бита')
-        # TO_CHAT_ID = "593069749"  # айди пользователя ,которому должен приходить файл
-        bot.forward_message(i, USERID, int(mess_id_wav_file))
-        bot.forward_message(i, USERID, int(mess_id_photo))
-        bot.forward_message(i, USERID, int(DOGOVOR_FILE))
+        for i in massivv:
+            bot.send_message(i, f'Пользователь {USERURL} ({USERID}) '
+                                f'сделал заказ!'
+                                f'\nЦена: {us_prise}'
+                                f'\nИмя артиста: {NAME_ARTIST}'
+                                f'\nТип релиза: {TYPE_RELIZE}'
+                                f'\nЕсть ли маты в треке: {MAT}'
+                                f'\n1-й файл - трек в формате wav'
+                                f'\n2-й файл - обложка трека'
+                                f'\n3-й файл - фото договора о покупке бита или '
+                                f'видео с записью проекта бита')
+            # TO_CHAT_ID = "593069749"  # айди пользователя ,которому должен приходить файл
+            bot.forward_message(i, USERID, int(mess_id_wav_file))
+            bot.forward_message(i, USERID, int(mess_id_photo))
+            bot.forward_message(i, USERID, int(DOGOVOR_FILE))
+    except:
+        if_error(message)
 
 
 def start_2(message):
