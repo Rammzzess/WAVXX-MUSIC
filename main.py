@@ -409,7 +409,6 @@ def mailing_data_sell(message):
                                 f'\n2-й файл - обложка трека'
                                 f'\n3-й файл - фото договора о покупке бита или '
                                 f'видео с записью проекта бита')
-            # TO_CHAT_ID = "593069749"  # айди пользователя ,которому должен приходить файл
             bot.forward_message(i, USERID, int(mess_id_wav_file))
             bot.forward_message(i, USERID, int(mess_id_photo))
             bot.forward_message(i, USERID, int(DOGOVOR_FILE))
