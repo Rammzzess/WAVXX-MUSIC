@@ -22,7 +22,8 @@ CREATE TABLE IF NOT EXISTS mes_id_otzivy (
 MESS_ID INTEGER,
 MESS_ID_STAS INTEGER,
 MESS_ID_3 INTEGER,
-MESS_ID_4 INTEGER
+MESS_ID_4 INTEGER,
+MESS_ID_5 INTEGER
 )
 ''')
 
@@ -35,7 +36,7 @@ def bot_start(message):
     global USERID
     global massivv
 
-    massivv = [1144748923, 1024476833, 1118325249, 6269154840]
+    massivv = [1144748923, 1024476833, 1118325249, 6269154840, 1013942285]
 
     USERID = message.from_user.id
 
@@ -99,7 +100,6 @@ def distribution(message):
                 P = [int(str(i)[1:-2]) for i in P_0]
 
                 connect.commit()
-                connect.close()
                 for t in P:
                     bot.forward_message(message.from_user.id, 1144748923, t)
 
@@ -108,7 +108,6 @@ def distribution(message):
                 R = [int(str(i)[1:-2]) for i in R_0]
 
                 connect.commit()
-                connect.close()
                 for s in R:
                     bot.forward_message(message.from_user.id, 1118325249, s)
 
@@ -117,9 +116,17 @@ def distribution(message):
                 x = [int(str(i)[1:-2]) for i in x_0]
 
                 connect.commit()
-                connect.close()
                 for cv in x:
                     bot.forward_message(message.from_user.id, 6269154840, cv)
+
+                cursor.execute('SELECT MESS_ID_5 FROM mes_id_otzivy')
+                rrr_0 = list(set(cursor.fetchall()))
+                rrr = [int(str(i)[1:-2]) for i in rrr_0]
+
+                connect.commit()
+                connect.close()
+                for z in rrr:
+                    bot.forward_message(message.from_user.id, 1013942285, z)
             except:
                 pass
             stop_message = bot.send_message(message.chat.id, 'Пока что это все отзывы! '
@@ -326,8 +333,8 @@ def mailing_data_sell():
                                      f'\nЕсть ли маты в треке: {MAT}'
                                      f'\n1-й файл - трек в формате wav'
                                      f'\n2-й файл - обложка трека'
-                                     f'\n3-й файл - фото договора о покупке бита или видео '
-                                     f'с записью проекта бита')
+                                     f'\n3-й файл - фото договора о покупке бита или '
+                            f'видео с записью проекта бита')
         # TO_CHAT_ID = "593069749"  # айди пользователя ,которому должен приходить файл
         bot.forward_message(i, USERID, mess_id_wav_file)
         bot.forward_message(i, USERID, mess_id_photo)
@@ -424,6 +431,13 @@ def otz_2(message):
     elif str(message.from_user.id) == '6269154840':
         cursor.execute(
             f'INSERT INTO mes_id_otzivy (MESS_ID_4) VALUES ({message.message_id})')
+        connect.commit()
+        connect.close()
+        bot.send_message(message.chat.id, 'Отзыв добавлен!')
+        next_start(message)
+    elif str(message.from_user.id) == '1013942285':
+        cursor.execute(
+            f'INSERT INTO mes_id_otzivy (MESS_ID_5) VALUES ({message.message_id})')
         connect.commit()
         connect.close()
         bot.send_message(message.chat.id, 'Отзыв добавлен!')
