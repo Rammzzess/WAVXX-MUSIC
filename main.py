@@ -2,8 +2,6 @@ import telebot
 import button
 import sqlite3
 
-from telebot import types
-
 bot = telebot.TeleBot('6597040115:AAH9wOSD44nJm21g8vNoIj7mAkxzrxVcJnk')
 
 PrIsE = 200
@@ -27,10 +25,52 @@ MESS_ID_5 INTEGER
 )
 ''')
 
+cursor.execute('''
+CREATE TABLE IF NOY EXISTS all_data_user (
+USERID INTEGER,
+us_prise TEXT,
+mess_id_wav_file INTEGER,
+NAME_ARTIST TEXT,
+TYPE_RELIZE TEXT,
+mess_id_photo INTEGER,
+DOGOVOR_FILE INTEGER,
+MAT TEXT,
+USERURL TEXT
+)
+''')
+
 connect.commit()
 connect.close()
 
+
+def data_in_table(name_parameter, name_data, usidd):
+    connect = sqlite3.connect('useriddata.db')
+    cursor = connect.cursor()
+
+    cursor.execute(f'UPDATE all_data_user SET {name_parameter} = ? WHERE USERID = ?',
+                   (name_data, usidd))
+
+    connect.commit()
+    connect.close()
+
+
+def select_data(name_parameter, usidd):
+    connect = sqlite3.connect('useriddata.db')
+    cursor = connect.cursor()
+
+    cursor.execute(f'SELECT {name_parameter} FROM all_data_user WHERE USERID = ?',
+                   (usidd))
+
+    k_0 = list(set(cursor.fetchall()))
+    k = [str(i)[1:-2] for i in k_0]
+
+    connect.commit()
+    connect.close()
+    return k[0]
+
+
 massivv = [1144748923, 1024476833, 1118325249, 6269154840, 1013942285]
+
 
 @bot.message_handler(commands=['start'])
 def adm_or_not(message):
@@ -41,14 +81,11 @@ def adm_or_not(message):
 
 
 def bot_start(message):
-    global USERID
-
-    USERID = message.from_user.id
-
     connect = sqlite3.connect('useriddata.db')
     cursor = connect.cursor()
 
     cursor.execute(f'INSERT INTO useridtable (USID) VALUES ({message.from_user.id})')
+    cursor.execute(f'INSERT INTO all_data_user (USERID) VALUES ({message.from_user.id})')
     connect.commit()
     connect.close()
 
@@ -172,7 +209,6 @@ def distribution(message):
 
 
 def distribution_2(message):
-    global us_prise
     if 'Платную' in message.text:
         us_prise = 'Платная дистрибуция'
 
@@ -181,14 +217,15 @@ def distribution_2(message):
                                                          'ваш трек в формате wav',
                                         reply_markup=button.del_btn)
         bot.register_next_step_handler(stop_message, file_wav)
+        data_in_table('us_prise', us_prise, message.from_user.id)
     elif 'Бесплатную' in message.text:
         us_prise = 'Бесплатная дистрибуция'
-
         stop_message = bot.send_message(message.chat.id, 'Хорошо. '
                                                          'Для начала пришлите '
                                                          'ваш трек в формате wav',
                                         reply_markup=button.del_btn)
         bot.register_next_step_handler(stop_message, file_wav)
+        data_in_table('us_prise', us_prise, message.from_user.id)
     elif 'отзывы' in str(message.text).lower():
         distribution(message)
     else:
@@ -200,8 +237,9 @@ def distribution_2(message):
 
 def file_wav(message):
     if message.content_type == 'document':
-        global mess_id_wav_file
         mess_id_wav_file = message.message_id
+        data_in_table('mess_id_wav_file', mess_id_wav_file,
+                      message.from_user.id)
         stop_message = bot.send_message(message.chat.id, 'Теперь пришлите имя артиста'
                                                          ' (псевдоним)')
         bot.register_next_step_handler(stop_message, name_artist)
@@ -212,8 +250,8 @@ def file_wav(message):
 
 
 def name_artist(message):
-    global NAME_ARTIST
     NAME_ARTIST = message.text
+    data_in_table('NAME_ARTIST', NAME_ARTIST, message.from_user.id)
     stop_message = bot.send_message(message.chat.id, 'Отлично! Теперь выберете тип '
                                                      'релиза...',
                                     reply_markup=button.type_relize)
@@ -221,9 +259,9 @@ def name_artist(message):
 
 
 def type_relize(message):
-    global TYPE_RELIZE
     if str(message.text).lower() == 'сингл':
         TYPE_RELIZE = 'Сингл'
+        data_in_table('TYPE_RELIZE', TYPE_RELIZE, message.from_user.id)
         stop_message = bot.send_message(message.chat.id, 'Спасибо! Теперь пришлите '
                                                          'обложку трека в формате '
                                                          '3000x3000',
@@ -231,6 +269,7 @@ def type_relize(message):
         bot.register_next_step_handler(stop_message, photo_treck)
     elif str(message.text).lower() == 'ер альбом':
         TYPE_RELIZE = 'Ер альбом'
+        data_in_table('TYPE_RELIZE', TYPE_RELIZE, message.from_user.id)
         stop_message = bot.send_message(message.chat.id, 'Спасибо! Теперь пришлите '
                                                          'обложку трека в формате '
                                                          '3000x3000',
@@ -238,6 +277,7 @@ def type_relize(message):
         bot.register_next_step_handler(stop_message, photo_treck)
     elif str(message.text).lower() == 'альбом':
         TYPE_RELIZE = 'Альбом'
+        data_in_table('TYPE_RELIZE', TYPE_RELIZE, message.from_user.id)
         stop_message = bot.send_message(message.chat.id, 'Спасибо! Теперь пришлите '
                                                          'обложку трека в формате '
                                                          '3000x3000',
@@ -252,8 +292,8 @@ def type_relize(message):
 
 def photo_treck(message):
     if message.content_type == 'photo' or message.content_type == 'document':
-        global mess_id_photo
         mess_id_photo = message.message_id
+        data_in_table('mess_id_photo', mess_id_photo, message.from_user.id)
         stop_message = bot.send_message(message.chat.id, 'Пришлите фото договора о '
                                                          'покупке бита,а если бит ваш,'
                                                          'то пожалуйста запишите 30-ти '
@@ -271,8 +311,8 @@ def photo_treck(message):
 def dogovor(message):
     if (message.content_type == 'photo' or message.content_type == 'document' or
             message.content_type == 'video'):
-        global DOGOVOR_FILE
         DOGOVOR_FILE = message.message_id
+        data_in_table('DOGOVOR_FILE', DOGOVOR_FILE, message.from_user.id)
         stop_message = bot.send_message(message.chat.id, 'Есть ли маты в вашем треке? ('
                                                          'Да | Нет)',
                                         reply_markup=button.yes_no)
@@ -287,17 +327,18 @@ def dogovor(message):
 
 
 def mat_in_track(message):
-    global MAT
-    global USERURL
     USERURL = '@' + str(message.from_user.username)
+    data_in_table('USERURL', USERURL, message.from_user.id)
     if 'нет' in str(message.text).lower():
         MAT = 'Нет'
+        data_in_table('MAT', MAT, message.from_user.id)
         bot.send_message(message.chat.id, 'Отлично! Обрабатываю '
                                           'информацию...',
                          reply_markup=button.del_btn)
         if_free_or_sell(message)
     elif 'да' in str(message.text).lower():
         MAT = 'Да'
+        data_in_table('MAT', MAT, message.from_user.id)
         bot.send_message(message.chat.id, 'Отлично! Обрабатываю '
                                           'информацию...',
                          reply_markup=button.del_btn)
@@ -310,6 +351,7 @@ def mat_in_track(message):
 
 
 def if_error(message):
+    USERURL = '@' + str(message.from_user.username)
     bot.send_message(message.chat.id, 'Извините, произошла техническая ошибка...'
                                       ' С вами свяжется администратор, для оформления'
                                       ' заказа в лс...')
@@ -320,6 +362,7 @@ def if_error(message):
 
 
 def if_free_or_sell(message):
+    us_prise = select_data('us_prise', message.from_user.id)
     if us_prise == 'Платная дистрибуция':
         bot.send_message(message.chat.id, 'Отправляю данные для завершения заказа...')
         bot.send_message(message.chat.id, f'Покупка составит {PrIsE} рублей. '
@@ -329,7 +372,7 @@ def if_free_or_sell(message):
                                                          'скриншот '
                                                          'операции админу - @Hexxx303',
                                         reply_markup=button.start_2)
-        mailing_data_sell()
+        mailing_data_sell(message)
         bot.register_next_step_handler(stop_message, start_2)
     elif us_prise == 'Бесплатная дистрибуция':
         bot.send_message(message.chat.id, 'Отправляю данные для завершения заказа...')
@@ -337,13 +380,23 @@ def if_free_or_sell(message):
                                                          'как только '
                                                          'примет заказ',
                                         reply_markup=button.start_2)
-        mailing_data_sell()
+        mailing_data_sell(message)
         bot.register_next_step_handler(stop_message, start_2)
     else:
         if_error(message)
 
 
-def mailing_data_sell():
+def mailing_data_sell(message):
+    USERID = message.from_user.id
+    USERURL = select_data('USERURL', USERID)
+    us_prise = select_data('us_prise', USERID)
+    NAME_ARTIST = select_data('NAME_ARTIST', USERID)
+    TYPE_RELIZE = select_data('TYPE_RELIZE', USERID)
+    MAT = select_data('MAT', USERID)
+    mess_id_wav_file = select_data('mess_id_wav_file', USERID)
+    mess_id_photo = select_data('mess_id_photo', USERID)
+    DOGOVOR_FILE = select_data('DOGOVOR_FILE', USERID)
+
     for i in massivv:
         bot.send_message(i, f'Пользователь {USERURL} ({USERID}) '
                             f'сделал заказ!'
@@ -356,9 +409,9 @@ def mailing_data_sell():
                             f'\n3-й файл - фото договора о покупке бита или '
                             f'видео с записью проекта бита')
         # TO_CHAT_ID = "593069749"  # айди пользователя ,которому должен приходить файл
-        bot.forward_message(i, USERID, mess_id_wav_file)
-        bot.forward_message(i, USERID, mess_id_photo)
-        bot.forward_message(i, USERID, DOGOVOR_FILE)
+        bot.forward_message(i, USERID, int(mess_id_wav_file))
+        bot.forward_message(i, USERID, int(mess_id_photo))
+        bot.forward_message(i, USERID, int(DOGOVOR_FILE))
 
 
 def start_2(message):
@@ -456,6 +509,7 @@ def set_priseee(message):
 
 
 def set_pr(message):
+    global PrIsE
     PrIsE = int(message.text)
     bot.send_message(message.chat.id, 'Цена установлена!')
     next_start(message)
