@@ -32,21 +32,26 @@ connect.close()
 
 
 @bot.message_handler(commands=['start'])
-def bot_start(message):
-    global USERID
+def adm_or_not(message):
     global massivv
 
     massivv = [1144748923, 1024476833, 1118325249, 6269154840, 1013942285]
 
+    if message.from_user.id in massivv:
+        start_admin(message)
+    else:
+        bot_start(message)
+def bot_start(message):
+    global USERID
+
     USERID = message.from_user.id
 
-    if USERID not in massivv:
-        connect = sqlite3.connect('useriddata.db')
-        cursor = connect.cursor()
+    connect = sqlite3.connect('useriddata.db')
+    cursor = connect.cursor()
 
-        cursor.execute(f'INSERT INTO useridtable (USID) VALUES ({message.from_user.id})')
-        connect.commit()
-        connect.close()
+    cursor.execute(f'INSERT INTO useridtable (USID) VALUES ({message.from_user.id})')
+    connect.commit()
+    connect.close()
 
     bot.reply_to(message, f'Привет, {message.from_user.first_name}!'
                           f'\nДобро пожаловать в WAVXX '
@@ -57,6 +62,21 @@ def bot_start(message):
                                                      'дистрибуцию?',
                                     reply_markup=button.start_reply_bt)
     bot.register_next_step_handler(stop_message, distribution)
+
+
+def start_admin(message):
+    bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Вижу, '
+                                      f'что ты администратор! Сейчас я тебе расскажу о '
+                                      f'основных командах для администратора...')
+    next_start(message)
+
+
+def next_start(message):
+    bot.send_message(message.chat.id, 'Для того, чтобы отправить сообщение '
+                                      'всем пользователям, введи команду /message')
+    bot.send_message(message.chat.id, 'Чтобы добавить новый отзыв введи команду /otz')
+    bot.send_message(message.chat.id, 'На этом пока что все! Приятного использования '
+                                      'бота! Успеха)', reply_markup=button.del_btn)
 
 
 def distribution(message):
@@ -349,22 +369,6 @@ def start_2(message):
                                                          'одну заявку на дистрибуцию, '
                                                          'нажмите на кнопку ниже...')
         bot.register_next_step_handler(stop_message, start_2)
-
-
-@bot.message_handler(commands=['startAdmin'])
-def start_admin(message):
-    bot.send_message(message.chat.id, f'Привет, {message.from_user.first_name}! Вижу, '
-                                      f'что ты администратор! Сейчас я тебе расскажу о '
-                                      f'основных командах для администратора...')
-    next_start(message)
-
-
-def next_start(message):
-    bot.send_message(message.chat.id, 'Для того, чтобы отправить сообщение '
-                                      'всем пользователям, введи команду /message')
-    bot.send_message(message.chat.id, 'Чтобы добавить новый отзыв введи команду /otz')
-    bot.send_message(message.chat.id, 'На этом пока что все! Приятного использования '
-                                      'бота! Успеха)', reply_markup=button.del_btn)
 
 
 @bot.message_handler(commands=['message'])
