@@ -30,17 +30,16 @@ MESS_ID_5 INTEGER
 connect.commit()
 connect.close()
 
+massivv = [1144748923, 1024476833, 1118325249, 6269154840, 1013942285]
 
 @bot.message_handler(commands=['start'])
 def adm_or_not(message):
-    global massivv
-
-    massivv = [1144748923, 1024476833, 1118325249, 6269154840, 1013942285]
-
     if message.from_user.id in massivv:
         start_admin(message)
     else:
         bot_start(message)
+
+
 def bot_start(message):
     global USERID
 
@@ -75,6 +74,8 @@ def next_start(message):
     bot.send_message(message.chat.id, 'Для того, чтобы отправить сообщение '
                                       'всем пользователям, введи команду /message')
     bot.send_message(message.chat.id, 'Чтобы добавить новый отзыв введи команду /otz')
+    bot.send_message(message.chat.id, 'Чтобы изменить цену на платную дистрибуцию, '
+                                      'введи команду /setprice')
     bot.send_message(message.chat.id, 'На этом пока что все! Приятного использования '
                                       'бота! Успеха)', reply_markup=button.del_btn)
 
@@ -83,8 +84,8 @@ def distribution(message):
     try:
         if (message.text == 'Да >>' or 'да' in str(message.text).lower() or
                 'оставить заявку на дистрибуцию...' in str(message.text).lower()):
-            bot.reply_to(message, 'Давай помогу вам определиться, какую дистрибуцию '
-                                  'выбрать? Платную (Recommend) или бесплатную?',
+            bot.reply_to(message, f'Давай помогу вам определиться, какую дистрибуцию '
+                                  f'выбрать? Платную ({PrIsE} рублей) или бесплатную?',
                          reply_markup=button.distribution_prise)
             bot.send_message(message.chat.id, 'Почему стоит выбрать именно платную '
                                               'дистрибуцию? \n1) Роялти с вашего трека '
@@ -287,6 +288,8 @@ def dogovor(message):
 
 def mat_in_track(message):
     global MAT
+    global USERURL
+    USERURL = '@' + str(message.from_user.username)
     if 'нет' in str(message.text).lower():
         MAT = 'Нет'
         bot.send_message(message.chat.id, 'Отлично! Обрабатываю '
@@ -307,19 +310,16 @@ def mat_in_track(message):
 
 
 def if_error(message):
-    USERURL = '@' + message.from_user.username
     bot.send_message(message.chat.id, 'Извините, произошла техническая ошибка...'
                                       ' С вами свяжется администратор, для оформления'
                                       ' заказа в лс...')
     for i in massivv:
         bot.send_message(i, f'У пользователя {USERURL} произошла '
-                                     f'техническая ошибка во время оформления заказа... '
-                                     f'Свяжитесь с ним для оформления заказа...')
+                            f'техническая ошибка во время оформления заказа... '
+                            f'Свяжитесь с ним для оформления заказа...')
 
 
 def if_free_or_sell(message):
-    global USERURL
-    USERURL = '@' + message.from_user.username
     if us_prise == 'Платная дистрибуция':
         bot.send_message(message.chat.id, 'Отправляю данные для завершения заказа...')
         bot.send_message(message.chat.id, f'Покупка составит {PrIsE} рублей. '
@@ -346,14 +346,14 @@ def if_free_or_sell(message):
 def mailing_data_sell():
     for i in massivv:
         bot.send_message(i, f'Пользователь {USERURL} ({USERID}) '
-                                     f'сделал заказ!'
-                                     f'\nЦена: {us_prise}'
-                                     f'\nИмя артиста: {NAME_ARTIST}'
-                                     f'\nТип релиза: {TYPE_RELIZE}'
-                                     f'\nЕсть ли маты в треке: {MAT}'
-                                     f'\n1-й файл - трек в формате wav'
-                                     f'\n2-й файл - обложка трека'
-                                     f'\n3-й файл - фото договора о покупке бита или '
+                            f'сделал заказ!'
+                            f'\nЦена: {us_prise}'
+                            f'\nИмя артиста: {NAME_ARTIST}'
+                            f'\nТип релиза: {TYPE_RELIZE}'
+                            f'\nЕсть ли маты в треке: {MAT}'
+                            f'\n1-й файл - трек в формате wav'
+                            f'\n2-й файл - обложка трека'
+                            f'\n3-й файл - фото договора о покупке бита или '
                             f'видео с записью проекта бита')
         # TO_CHAT_ID = "593069749"  # айди пользователя ,которому должен приходить файл
         bot.forward_message(i, USERID, mess_id_wav_file)
@@ -446,6 +446,19 @@ def otz_2(message):
         connect.close()
         bot.send_message(message.chat.id, 'Отзыв добавлен!')
         next_start(message)
+
+
+@bot.message_handler(commands=['setprice'])
+def set_priseee(message):
+    stop_message = bot.send_message(message.chat.id, 'Введите новую цену! (Число без '
+                                                     'букв!!!)')
+    bot.register_next_step_handler(stop_message, set_pr)
+
+
+def set_pr(message):
+    PrIsE = int(message.text)
+    bot.send_message(message.chat.id, 'Цена установлена!')
+    next_start(message)
 
 
 @bot.message_handler(content_types=['text'])
