@@ -564,4 +564,4 @@ def helper(message):
                           'команду /start')
 
 
-bot.polling(none_stop=True)
+bot.infinity_polling(timeout=10, long_polling_timeout=5)
