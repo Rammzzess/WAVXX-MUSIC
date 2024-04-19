@@ -35,9 +35,7 @@ TYPE_RELIZE TEXT,
 mess_id_photo TEXT,
 DOGOVOR_FILE TEXT,
 MAT TEXT,
-USERURL TEXT,
-NAME_TRACK TEXT,
-DATE_RELIZE TEXT
+USERURL TEXT
 )
 ''')
 
@@ -154,10 +152,7 @@ def distribution(message):
 
                 for i in k:
                     bot.forward_message(message.from_user.id, 1024476833, i)
-            except:
-                pass
 
-            try:
                 cursor.execute('SELECT MESS_ID_STAS FROM mes_id_otzivy')
                 P_0 = list(set(cursor.fetchall()))
                 P = [int(str(i)[1:-2]) for i in P_0]
@@ -165,10 +160,7 @@ def distribution(message):
                 connect.commit()
                 for t in P:
                     bot.forward_message(message.from_user.id, 1144748923, t)
-            except:
-                pass
 
-            try:
                 cursor.execute('SELECT MESS_ID_3 FROM mes_id_otzivy')
                 R_0 = list(set(cursor.fetchall()))
                 R = [int(str(i)[1:-2]) for i in R_0]
@@ -176,10 +168,7 @@ def distribution(message):
                 connect.commit()
                 for s in R:
                     bot.forward_message(message.from_user.id, 1118325249, s)
-            except:
-                pass
 
-            try:
                 cursor.execute('SELECT MESS_ID_4 FROM mes_id_otzivy')
                 x_0 = list(set(cursor.fetchall()))
                 x = [int(str(i)[1:-2]) for i in x_0]
@@ -187,10 +176,7 @@ def distribution(message):
                 connect.commit()
                 for cv in x:
                     bot.forward_message(message.from_user.id, 6269154840, cv)
-            except:
-                pass
 
-            try:
                 cursor.execute('SELECT MESS_ID_5 FROM mes_id_otzivy')
                 rrr_0 = list(set(cursor.fetchall()))
                 rrr = [int(str(i)[1:-2]) for i in rrr_0]
@@ -228,9 +214,7 @@ def distribution_2(message):
 
         stop_message = bot.send_message(message.chat.id, 'Хорошо. '
                                                          'Для начала пришлите '
-                                                         'ваш трек в формате wav. '
-                                                         '(Если это альбом, '
-                                                         'то пришлите сразу все треки!)',
+                                                         'ваш трек в формате wav',
                                         reply_markup=button.del_btn)
         bot.register_next_step_handler(stop_message, file_wav)
         data_in_table('us_prise', us_prise, message.from_user.id)
@@ -238,9 +222,7 @@ def distribution_2(message):
         us_prise = 'Бесплатная дистрибуция'
         stop_message = bot.send_message(message.chat.id, 'Хорошо. '
                                                          'Для начала пришлите '
-                                                         'ваш трек в формате wav. '
-                                                         '\n(Если это альбом, '
-                                                         'то пришлите сразу все треки!)',
+                                                         'ваш трек в формате wav',
                                         reply_markup=button.del_btn)
         bot.register_next_step_handler(stop_message, file_wav)
         data_in_table('us_prise', us_prise, message.from_user.id)
@@ -259,11 +241,7 @@ def file_wav(message):
         data_in_table('mess_id_wav_file', mess_id_wav_file,
                       message.from_user.id)
         stop_message = bot.send_message(message.chat.id, 'Теперь пришлите имя артиста'
-                                                         ' (псевдоним)\n(Если трек '
-                                                         'является фитом, то напишите '
-                                                         'feat. и имя (псевдоним) '
-                                                         'артиста, который принимал '
-                                                         'участие в треке.)')
+                                                         ' (псевдоним)')
         bot.register_next_step_handler(stop_message, name_artist)
     else:
         stop_message = bot.send_message(message.chat.id, 'Вы должны прислать файл в '
@@ -274,21 +252,6 @@ def file_wav(message):
 def name_artist(message):
     NAME_ARTIST = message.text
     data_in_table('NAME_ARTIST', NAME_ARTIST, message.from_user.id)
-    stop_message = bot.send_message(message.chat.id, 'Отлично! Теперь укажите'
-                                                     ' дату релиза!')
-    bot.register_next_step_handler(stop_message, date_relize)
-
-def date_relize(message):
-    DATE_RELIZE = message.text
-    data_in_table('DATE_RELIZE', DATE_RELIZE, message.from_user.id)
-    stop_message = bot.send_message(message.chat.id, 'Теперь укажите '
-                                                     'название трека...')
-    bot.register_next_step_handler(stop_message, name_track)
-
-
-def name_track(message):
-    NAME_TRACK = message.text
-    data_in_table('NAME_TRACK', NAME_TRACK, message.from_user.id)
     stop_message = bot.send_message(message.chat.id, 'Отлично! Теперь выберете тип '
                                                      'релиза...',
                                     reply_markup=button.type_relize)
@@ -434,17 +397,13 @@ def mailing_data_sell(message):
         mess_id_wav_file = (select_data('mess_id_wav_file', USERID))[1:-1]
         mess_id_photo = (select_data('mess_id_photo', USERID))[1:-1]
         DOGOVOR_FILE = (select_data('DOGOVOR_FILE', USERID))[1:-1]
-        DATE_RELIZE = (select_data('DATE_RELIZE', USERID))[1:-1]
-        NAME_TRACK = (select_data('NAME_TRACK', USERID))[1:-1]
 
         for i in massivv:
             bot.send_message(i, f'Пользователь {USERURL} ({USERID}) '
                                 f'сделал заказ!'
                                 f'\nЦена: {us_prise}'
                                 f'\nИмя артиста: {NAME_ARTIST}'
-                                f'\nНазвание трека: {NAME_TRACK}'
                                 f'\nТип релиза: {TYPE_RELIZE}'
-                                f'\nДата релиза: {DATE_RELIZE}'
                                 f'\nЕсть ли маты в треке: {MAT}'
                                 f'\n1-й файл - трек в формате wav'
                                 f'\n2-й файл - обложка трека'
