@@ -2,7 +2,7 @@ import telebot
 import button
 import sqlite3
 
-bot = telebot.TeleBot('6597040115:AAH9wOSD44nJm21g8vNoIj7mAkxzrxVcJnk')
+bot = telebot.TeleBot(str(input('Введите токен бота')
 
 PrIsE = 200
 
